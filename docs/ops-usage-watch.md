@@ -229,6 +229,27 @@ understates usage by 10⁶, which presents as a permanently, reassuringly empty
 bandwidth row. `toBytes()` converts through the declared unit and refuses to
 guess an unrecognised one.
 
+### Are the gaps real? (`ops:gaps`)
+
+Yes — measured 2026-09-02 over 7 days: 82 gaps, 50 of them past the 15-minute
+idle threshold, **110.8h up out of 168h**. The service spins down as designed, is
+woken ~12x/day, and every wake re-reads the whole boot payload. The cold-start
+rate the egress model multiplies by is sound.
+
+⚠ **It looked otherwise, and the trap is worth keeping.** The report's own two
+figures appeared to contradict each other: 93–96% uptime beside 12.6 cold
+starts/day is an average gap under 7 minutes, which is shorter than Render will
+wait before spinning anything down. They measure different **windows**. The
+report's uptime is cycle-to-date, the cycle was two days old, and across those
+two days the service had stopped spinning down. Both numbers were right about
+their own window, and the shorter one was unrepresentative of the month.
+
+So [`scripts/ops/gaps.mjs`](../scripts/ops/gaps.mjs) prints a histogram bucketed
+either side of the idle threshold **and** a per-day uptime breakdown, from the
+same endpoint `--discover` dumps ten thousand timestamps of. The per-day half is
+not decoration: an average over a week cannot show you the day the behaviour
+changed, and that day was the finding.
+
 **⚠ Render reports no instance-count for free services** — `200` with an empty
 array. That is a plan limitation, not a zero, so it is left **unreported**;
 recording 0 would read as a wide-open budget on the metric a 24/7 free service
@@ -269,7 +290,8 @@ OPS_WEBHOOK_URL=…    # Discord channel → Integrations → Webhooks
 | Command | Does |
 |---|---|
 | `npm run ops:usage` | Verdict table, attribution, alert if warranted. |
-| `npm run ops:usage:discover` | Raw API payloads, no verdicts. Use when a shape changes. |
+| `npm run ops:usage:discover` | Raw API payloads, no verdicts. Use when a shape changes. ⚠ A week of CPU samples is ~10,000 timestamps, so this scrolls off a terminal — redirect it (`> dump.json`) rather than reading it live, and reach for `ops:gaps` when the question is about uptime. |
+| `npm run ops:gaps` | Gap histogram over Render's CPU timeline — tells a spin-down from a missed scrape. `--days N` to widen the window. |
 | `npm run ops:smoke` | The pure decision logic. Wired into `pretest:regress`. |
 
 Flags: `--json`, `--no-alert`, `--no-db` (skip attribution), `--fail-on-alert`

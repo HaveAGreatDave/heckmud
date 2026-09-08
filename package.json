@@ -52,6 +52,7 @@
     "docs:readmes": "node scripts/docs/readmes.mjs",
     "ops:usage": "node scripts/ops/usage-report.mjs",
     "ops:usage:discover": "node scripts/ops/usage-report.mjs --discover",
+    "ops:gaps": "node scripts/ops/gaps.mjs",
     "ops:smoke": "node scripts/ops/smoke.mjs"
   },
   "dependencies": {

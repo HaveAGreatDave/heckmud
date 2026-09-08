@@ -38,7 +38,10 @@ export function pickService(services) {
   return { service: null, how: null };
 }
 
-async function api(path, key) {
+// Exported so a focused diagnostic (scripts/ops/gaps.mjs) can ask the same API
+// the same way, rather than growing a second fetch wrapper with its own idea of
+// what an error looks like.
+export async function api(path, key) {
   const res = await fetch(`${API}${path}`, {
     headers: { Accept: 'application/json', Authorization: `Bearer ${key}` },
   });
